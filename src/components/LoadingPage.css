@@ -1,0 +1,62 @@
+.loading-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f72585 0%, #7209b7 100%);
+  color: #fff;
+  animation: fadeIn 0.7s;
+}
+
+.loading-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.loading-logo span {
+  font-size: 4rem;
+  animation: floatUnicorn 2s infinite ease-in-out;
+}
+
+.loading-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-top: 0.5rem;
+  background: linear-gradient(90deg, #fff 0%, #ffe066 50%, #f72585 100%);
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #fff;
+  border-top: 6px solid #f72585;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes floatUnicorn {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+} 
