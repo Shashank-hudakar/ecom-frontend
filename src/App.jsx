@@ -1,5 +1,5 @@
 import React from "react";
-import Products from "./components/Products";
+import Products from "./components/products";
 import { ThemeProvider } from "./context/ThemeContext";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
