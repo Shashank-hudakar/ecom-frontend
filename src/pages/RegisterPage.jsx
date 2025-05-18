@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const RegisterPage = () => {
@@ -11,6 +11,31 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!hasUpperCase) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!hasLowerCase) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!hasNumbers) {
+      return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+      return 'Password must contain at least one special character';
+    }
+    return '';
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,14 +50,23 @@ const RegisterPage = () => {
     setIsLoading(true);
     setError('');
 
+    // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
 
+    // Validate password strength
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setError(passwordError);
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -43,20 +77,35 @@ const RegisterPage = () => {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        setError(data.message || 'Registration failed');
-        return;
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
       }
 
-      // Show success message and redirect to login
-      alert('Registration successful! Please login to continue.');
-      navigate('/login');
+      navigate('/login', { 
+        state: { message: 'Registration successful! Please login to continue.' }
+      });
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSocialRegister = (provider) => {
+    // Implement social registration logic here
+    console.log(`Registering with ${provider}`);
+  };
+
+  // Add animation keyframes once on mount
+  useEffect(() => {
+    const styleSheet = document.styleSheets[0];
+    const keyframes =
+      `@keyframes fadeIn {
+         from { opacity: 0; transform: translateY(-20px); }
+         to { opacity: 1; transform: translateY(0); }
+       }`;
+    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+  }, []);
 
   return (
     <div style={styles.pageBackground}>
@@ -83,6 +132,7 @@ const RegisterPage = () => {
               style={styles.input}
               placeholder="Enter your full name"
               required
+              minLength={2}
             />
           </div>
 
@@ -109,7 +159,11 @@ const RegisterPage = () => {
               style={styles.input}
               placeholder="Create a password"
               required
+              minLength={8}
             />
+            <p style={styles.passwordHint}>
+              Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character
+            </p>
           </div>
 
           <div style={styles.inputGroup}>
@@ -158,7 +212,10 @@ const RegisterPage = () => {
         </div>
 
         <div style={styles.socialButtons}>
-          <button style={styles.socialButton}>
+          <button 
+            style={styles.socialButton}
+            onClick={() => handleSocialRegister('Google')}
+          >
             <img 
               src="https://www.google.com/favicon.ico" 
               alt="Google" 
@@ -166,7 +223,10 @@ const RegisterPage = () => {
             />
             Google
           </button>
-          <button style={styles.socialButton}>
+          <button 
+            style={styles.socialButton}
+            onClick={() => handleSocialRegister('Facebook')}
+          >
             <img 
               src="https://www.facebook.com/favicon.ico" 
               alt="Facebook" 
@@ -249,27 +309,35 @@ const styles = {
     border: '1.5px solid #e5e7eb',
     fontSize: '15px',
     transition: 'all 0.2s',
-    ':focus': {
+    outline: 'none',
+    '&:focus': {
       borderColor: '#667eea',
       boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
     },
   },
+  passwordHint: {
+    fontSize: '12px',
+    color: '#6b7280',
+    marginTop: '4px',
+  },
   termsCheckbox: {
-    fontSize: '14px',
-    color: '#4b5563',
+    marginTop: '8px',
   },
   checkboxLabel: {
     display: 'flex',
     alignItems: 'flex-start',
     gap: '8px',
+    fontSize: '14px',
+    color: '#4b5563',
     cursor: 'pointer',
   },
   checkbox: {
     width: '16px',
     height: '16px',
-    marginTop: '2px',
     borderRadius: '4px',
     border: '1.5px solid #e5e7eb',
+    cursor: 'pointer',
+    marginTop: '2px',
   },
   button: {
     background: '#667eea',
@@ -281,56 +349,53 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    ':hover': {
-      background: '#5a67d8',
-      transform: 'translateY(-1px)',
+    '&:hover': {
+      background: '#5a6fd6',
+    },
+    '&:disabled': {
+      background: '#a5b4f3',
+      cursor: 'not-allowed',
     },
   },
   buttonLoading: {
-    opacity: '0.7',
-    cursor: 'not-allowed',
+    opacity: 0.7,
   },
   divider: {
-    position: 'relative',
-    textAlign: 'center',
-    margin: '30px 0',
-    '::before': {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '20px 0',
+    '&::before, &::after': {
       content: '""',
-      position: 'absolute',
-      top: '50%',
-      left: '0',
-      right: '0',
-      height: '1px',
-      background: '#e5e7eb',
+      flex: 1,
+      borderBottom: '1px solid #e5e7eb',
     },
   },
   dividerText: {
-    background: 'white',
-    padding: '0 16px',
+    padding: '0 10px',
     color: '#6b7280',
     fontSize: '14px',
-    position: 'relative',
   },
   socialButtons: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    display: 'flex',
     gap: '12px',
+    marginBottom: '20px',
   },
   socialButton: {
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
     padding: '12px',
-    border: '1.5px solid #e5e7eb',
     borderRadius: '10px',
+    border: '1.5px solid #e5e7eb',
     background: 'white',
-    color: '#374151',
     fontSize: '14px',
     fontWeight: '500',
+    color: '#374151',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    ':hover': {
+    '&:hover': {
       background: '#f9fafb',
       borderColor: '#d1d5db',
     },
@@ -341,15 +406,14 @@ const styles = {
   },
   switchLink: {
     textAlign: 'center',
-    marginTop: '30px',
-    fontSize: '15px',
+    fontSize: '14px',
     color: '#4b5563',
   },
   link: {
     color: '#667eea',
     textDecoration: 'none',
     fontWeight: '500',
-    ':hover': {
+    '&:hover': {
       textDecoration: 'underline',
     },
   },

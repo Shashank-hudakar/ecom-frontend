@@ -14,29 +14,32 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
-        setError("Invalid email or password");
-        return;
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Invalid email or password");
       }
 
       const data = await response.json();
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
       
-      // Show success message and redirect to home page
-      alert('Login successful! Welcome back.');
       navigate('/');
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSocialLogin = (provider) => {
+    // Implement social login logic here
+    console.log(`Logging in with ${provider}`);
   };
 
   // Add animation keyframes once on mount
@@ -116,7 +119,10 @@ const LoginPage = () => {
         </div>
 
         <div style={styles.socialButtons}>
-          <button style={styles.socialButton}>
+          <button 
+            style={styles.socialButton}
+            onClick={() => handleSocialLogin('Google')}
+          >
             <img 
               src="https://www.google.com/favicon.ico" 
               alt="Google" 
@@ -124,7 +130,10 @@ const LoginPage = () => {
             />
             Google
           </button>
-          <button style={styles.socialButton}>
+          <button 
+            style={styles.socialButton}
+            onClick={() => handleSocialLogin('Facebook')}
+          >
             <img 
               src="https://www.facebook.com/favicon.ico" 
               alt="Facebook" 
@@ -207,7 +216,8 @@ const styles = {
     border: '1.5px solid #e5e7eb',
     fontSize: '15px',
     transition: 'all 0.2s',
-    ':focus': {
+    outline: 'none',
+    '&:focus': {
       borderColor: '#667eea',
       boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
     },
@@ -229,12 +239,13 @@ const styles = {
     height: '16px',
     borderRadius: '4px',
     border: '1.5px solid #e5e7eb',
+    cursor: 'pointer',
   },
   forgotPassword: {
     color: '#667eea',
     textDecoration: 'none',
     fontWeight: '500',
-    ':hover': {
+    '&:hover': {
       textDecoration: 'underline',
     },
   },
@@ -248,56 +259,53 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    ':hover': {
-      background: '#5a67d8',
-      transform: 'translateY(-1px)',
+    '&:hover': {
+      background: '#5a6fd6',
+    },
+    '&:disabled': {
+      background: '#a5b4f3',
+      cursor: 'not-allowed',
     },
   },
   buttonLoading: {
-    opacity: '0.7',
-    cursor: 'not-allowed',
+    opacity: 0.7,
   },
   divider: {
-    position: 'relative',
-    textAlign: 'center',
-    margin: '30px 0',
-    '::before': {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '20px 0',
+    '&::before, &::after': {
       content: '""',
-      position: 'absolute',
-      top: '50%',
-      left: '0',
-      right: '0',
-      height: '1px',
-      background: '#e5e7eb',
+      flex: 1,
+      borderBottom: '1px solid #e5e7eb',
     },
   },
   dividerText: {
-    background: 'white',
-    padding: '0 16px',
+    padding: '0 10px',
     color: '#6b7280',
     fontSize: '14px',
-    position: 'relative',
   },
   socialButtons: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    display: 'flex',
     gap: '12px',
+    marginBottom: '20px',
   },
   socialButton: {
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
     padding: '12px',
-    border: '1.5px solid #e5e7eb',
     borderRadius: '10px',
+    border: '1.5px solid #e5e7eb',
     background: 'white',
-    color: '#374151',
     fontSize: '14px',
     fontWeight: '500',
+    color: '#374151',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    ':hover': {
+    '&:hover': {
       background: '#f9fafb',
       borderColor: '#d1d5db',
     },
@@ -308,16 +316,14 @@ const styles = {
   },
   switchLink: {
     textAlign: 'center',
-    marginTop: '30px',
-    fontSize: '15px',
+    fontSize: '14px',
     color: '#4b5563',
   },
   link: {
     color: '#667eea',
     textDecoration: 'none',
     fontWeight: '500',
-    marginLeft: '4px',
-    ':hover': {
+    '&:hover': {
       textDecoration: 'underline',
     },
   },
